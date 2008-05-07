@@ -1,0 +1,21 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwgTextReader", "mwgTextReader\mwgTextReader.csproj", "{9997C578-C5C7-4343-B285-3798F48B95FD}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Debug.ActiveCfg = Debug|.NET
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Debug.Build.0 = Debug|.NET
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Release.ActiveCfg = Release|.NET
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
