@@ -1,0 +1,624 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Something</name>
+    </assembly>
+    <members>
+        <member name="T:mwg.Drawing.Color">
+            <summary>
+            色を保持する為のクラス(class)です。色の情報は ARGB の 32bit で扱います。Alpha値は透明度を表す物として扱います。演算子(operator)を通して、混色・補色などの機能を提供します。
+            This is the class to represent a color, which offers, through some operator, some functions (mixing colors, getting ?(補色), and so on).
+            </summary>
+        </member>
+        <member name="F:mwg.Drawing.Color.r">
+            <summary>赤の強度を保持します。</summary>
+        </member>
+        <member name="F:mwg.Drawing.Color.g">
+            <summary>緑の強度を保持します。</summary>
+        </member>
+        <member name="F:mwg.Drawing.Color.b">
+            <summary>青の強度を保持します。</summary>
+        </member>
+        <member name="F:mwg.Drawing.Color.a">
+            <summary>透明度を保持します。</summary>
+        </member>
+        <member name="M:mwg.Drawing.Color.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            mwg.Drawing.Color コンストラクタ。与えられた情報から特定の色を生成し、生成した色を保持する mwg.Drawing.Color クラスインスタンスを作成します。色光の三原色RGB―赤(red)、緑(green)、青(blue)―それぞれの強さを指定して色を指定します。
+            </summary>
+            <param name="red">赤の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+            <param name="green">緑の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+            <param name="blue">青の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+        </member>
+        <member name="M:mwg.Drawing.Color.#ctor(System.Byte,System.Byte,System.Byte)">
+            <summary>
+            mwg.Drawing.Color コンストラクタ。与えられた情報から特定の色を生成し、生成した色を保持する mwg.Drawing.Color インスタンスを作成します。
+            色光の三原色RGB―赤(red)、緑(green)、青(blue)―それぞれの強さを指定して色を指定します。
+            </summary>
+            <param name="red">赤の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+            <param name="green">緑の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+            <param name="blue">青の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+        </member>
+        <member name="M:mwg.Drawing.Color.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            mwg.Drawing.Color コンストラクタ。与えられた情報から特定の色を生成し、生成した色を保持する mwg.Drawing.Color インスタンスを作成します。
+            色光の三原色RGBとα値A―赤(red)、緑(green)、青(blue)、透明度(transparence)―それぞれの強さを指定して色を指定します。
+            </summary>
+            <param name="red">赤の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+            <param name="green">緑の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+            <param name="blue">青の強度を設定します。0 から 255 迄の値を設定します。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+            <param name="alpha">透明度を指定します。0 から 255 迄の値を設定します。0 を指定した時には、全く透明でない、則ち標準的な不透明の色となります。
+            255 を指定した時には完全に透明な色を表します。完全に透明な時には、red,green,blue は生成される色に実質的に影響を持ちません。0 より小さい値を設定した時は 0 として、255 より大きい値を設定した時は 255 として処理します。</param>
+        </member>
+        <member name="M:mwg.Drawing.Color.#ctor(System.Byte,System.Byte,System.Byte,System.Byte)">
+            <summary>
+            mwg.Drawing.Color コンストラクタ。与えられた情報から特定の色を生成し、生成した色を保持する mwg.Drawing.Color インスタンスを作成します。色光の三原色RGBとα値A―赤(red)、緑(green)、青(blue)、透明度(transparence)―それぞれの強さを指定して色を指定します。
+            </summary>
+            <param name="red">赤の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+            <param name="green">緑の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+            <param name="blue">青の強度を設定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。</param>
+            <param name="alpha">透明度(transparence)を指定します。Binary 値を 0 から 255 迄の値に置き換えて読み取ります。0 を指定した時には、全く透明でない、則ち標準的な不透明の色となります。
+            255 を指定した時には完全に透明な色を表します。完全に透明な時には、red,green,blue は生成される色に実質的に影響を持ちません。</param>
+        </member>
+        <member name="M:mwg.Drawing.Color.op_Addition(mwg.Drawing.Color,mwg.Drawing.Color)">
+            <summary>
+            加法混色を行います。交換法則が成立します(<code>color1 + color2 == color2 + color1</code>)。零元には「黒」または「完全に透明な色」が相当します。残念ながら結合法則は不成立です。
+            </summary>
+        </member>
+        <member name="M:mwg.Drawing.Color.op_Subtraction(mwg.Drawing.Color,mwg.Drawing.Color)">
+            <summary>
+            加法混色の逆演算を行います。つまり、<code>(color1 + color2) - color2 == color1</code>が(丸め誤差を無視すれば)成立します。当然交換法則は不成立となります。結合法則は成立しません。
+            </summary>
+        </member>
+        <member name="M:mwg.Drawing.Color.op_Explicit(mwg.Drawing.Color)~System.Drawing.Color">
+            <summary>
+            独自の色を明示的に .NET Framework の System.Drawing.Color に変換します。情報の変質及び増減は在りません。
+            </summary>
+        </member>
+        <member name="P:mwg.Drawing.Color.Red">
+            <summary>
+            保持している色の赤の強度を取得または設定します。0 が最も弱く、255 が最も強いことを表します。
+            </summary>
+        </member>
+        <member name="P:mwg.Drawing.Color.Green">
+            <summary>
+            保持している色の緑の強度を取得または設定します。0 が最も弱く、255 が最も強いことを表します。
+            </summary>
+        </member>
+        <member name="P:mwg.Drawing.Color.Blue">
+            <summary>
+            保持している色の青の強度を取得または設定します。0 が最も弱く、255 が最も強いことを表します。
+            </summary>
+        </member>
+        <member name="P:mwg.Drawing.Color.Alpha">
+            <summary>
+            保持している色の透明度を取得または設定します。
+            </summary>
+        </member>
+        <member name="T:mwg.File.mwgBinary">
+            <summary>
+            byte[] のデータを管理するクラスです。
+            ファイルからの読み取り、細かい指定によるビットマップイメージへの変換、ストリーム読み取りに対応しています。
+            ファイルから読み取る場合は、静的メンバを通じて byte[] を得るか、コンストラクタを通じて mwgBinary のインスタンスを得て下さい。
+            細かい指定によるビットマップイメージへの変換は、<see cref="M:mwg.File.mwgBinary.ToBitmap(System.String,System.Int32)"/> 関数を通じて行います。
+            </summary>
+        </member>
+        <member name="F:mwg.File.mwgBinary.current">
+            <summary>
+            現在の読み取り位置を示します。データの先頭が 0 です。この、変数で指定されているデータ内の位置が、次の読み取り開始位置です。
+            </summary>
+        </member>
+        <member name="F:mwg.File.mwgBinary.binaryData">
+            <summary>
+            保持する Binary データの本体です。
+            </summary>
+        </member>
+        <member name="F:mwg.File.mwgBinary.filename">
+            <summary>
+            元になる、または、保存先であるファイル名を保持します。保存先が未定の場合は、filename=="%blank%" となります。
+            </summary>
+        </member>
+        <member name="M:mwg.File.mwgBinary.#ctor(System.String)">
+            <summary>
+            mwgBinary コンストラクタ。指定されたファイルの内容を読み出して、mwgBinary のインスタンスを作成します。
+            </summary>
+            <param name="filename">ファイル名を指定します。</param>
+        </member>
+        <member name="M:mwg.File.mwgBinary.#ctor(System.Byte[])">
+            <summary>
+            mwgBinary コンストラクタ。指定した byte[] を元にして、mwgBinary のインスタンスを作成します。
+            </summary>
+            <param name="BinaryData">元になる byte[] を指定します。</param>
+        </member>
+        <member name="M:mwg.File.mwgBinary.Move(System.Int32)">
+            <summary>
+            現在の読み取り位置を前後に移動します。
+            先頭位置よりも前を指定すると、先頭位置に移動します。末尾位置よりも後を指定すると、読み取り終了位置に移動します。
+            </summary>
+            <param name="length">どれだけ、読み取り位置を進めるかを指定します。負の値を指定しますと、読み取り位置を前に移動します。</param>
+        </member>
+        <member name="M:mwg.File.mwgBinary.ToBitmap(System.String,System.Int32)">
+            <summary>
+            string rule に指定した文字列により、保持しているデータの、画像への色々な変換を行います。
+            </summary>
+            <param name="rule">変換の方法を指定する引数です。文字列で指定します。複数の「法則」を順番に並べて表現した物です。詳細については、ToBitmap.htm を参照下さい。</param>
+            <param name="offset">データの読み取り開始位置を指定します。先頭は、 0 で表されます。</param>
+            <returns>バイナリデータを、適当な法則によって画像に変換して、System.Drawing.Bitmap として返します。</returns>
+        </member>
+        <member name="M:mwg.File.mwgBinary.ToBitmap(System.String)">
+            <summary>
+            string rule に指定した文字列により、保持しているデータの、画像への色々な変換を行います。
+            </summary>
+            <param name="rule">変換の方法を指定する引数です。文字列で指定します。複数の「法則」を順番に並べて表現した物です。詳細については、ToBitmap.htm を参照下さい。</param>
+            <returns>バイナリデータを、適当な法則によって画像に変換して、System.Drawing.Bitmap として返します。</returns>
+        </member>
+        <member name="M:mwg.File.mwgBinary.ToBitmap_kiriage(System.Int32,System.Int32)">
+            <summary>
+            a/b の切り上げを返す関数
+            </summary>
+            <param name="a">被除数(割られる数)</param>
+            <param name="b">法(割る数)</param>
+            <returns>ceiling(a/b)</returns>
+        </member>
+        <member name="M:mwg.File.mwgBinary.ToBitData">
+            <summary>
+            保持しているバイト列データを、ビット列に変換して返します。LE(リトルエンディアン)。
+            </summary>
+            <returns>変換結果を格納する byte[] です。[1]_2 は [1]_256、[0]_2 は [0]_256 で表現されます。</returns>
+        </member>
+        <member name="M:mwg.File.mwgBinary.WholeFileInBinary(System.String)">
+            <summary>
+            指定されたファイルの内容を、バイナリで全て抜き出します。
+            </summary>
+            <param name="filename">ファイル名を指定します。</param>
+            <returns>byte[] にファイルの内容を格納して返します。</returns>
+        </member>
+        <member name="M:mwg.File.mbDateTime.#ctor(System.Int32[])">
+            <summary>
+            mfTimeコンストラクタ
+            </summary>
+            <param name="time">年月日時分秒、デシ秒を含む配列からmfTimeを生成します。</param>
+        </member>
+        <member name="T:mwg.File.mwqDiff">
+            <summary>
+            簡単な差分を処理するためのクラス(差分を考える時、位置が固定されている物として考える。)
+            </summary>
+        </member>
+        <member name="F:mwg.File.mwqDiff.data">
+            <summary>
+            n番目の要素は、nバイト目の値が複数データの間で共通かそうでないかを示す値をとる。
+            値が 0-255 の時 = 共通 ;
+            値が 256 の時 = 異なる ;
+            </summary>
+        </member>
+        <member name="M:mwg.File.mwqDiff.#ctor(mwg.File.mwgBinary[])">
+            <summary>
+            コンストラクタ
+            ※そのバイトに於いて、一つでも異なるバイナリデータが存在すれば、それを異なる部分として登録する。
+            </summary>
+            <param name="x"></param>
+        </member>
+        <member name="M:mwg.File.mwqDiff.op_Multiply(mwg.File.mwqDiff,mwg.File.mwqDiff)">
+            <summary>
+            共に「共通」を示している場所の内、実際にデータが異なる部分を返します。元のbyte情報は失われます。
+            </summary>
+        </member>
+        <member name="M:mwg.Math.complex.op_UnaryPlus(mwg.Math.complex)">
+            <summary>public static complex operator +(complex a)
+            			</summary>
+        </member>
+        <member name="M:mwg.Math.complex.op_UnaryNegation(mwg.Math.complex)">
+            <summary>public static complex operator -(complex a)
+            			</summary>
+        </member>
+        <member name="M:mwg.Math.complex.op_Addition(mwg.Math.complex,mwg.Math.complex)">
+            <summary>public static complex operator +(complex a,complex b)
+            			</summary>
+        </member>
+        <member name="M:mwg.Math.complex.op_Subtraction(mwg.Math.complex,mwg.Math.complex)">
+            <summary>public static complex operator -(complex a,complex b)
+            			</summary>
+        </member>
+        <member name="M:mwg.Math.complex.op_OnesComplement(mwg.Math.complex)">
+            <summary>共役複素数演算子</summary>
+        </member>
+        <member name="M:mwg.Math.complex.sqrt(mwg.Math.complex)">
+            <summary>平方根(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.sin(mwg.Math.complex)">
+            <summary>正弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.cos(mwg.Math.complex)">
+            <summary>余弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.tan(mwg.Math.complex)">
+            <summary>正接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.cot(mwg.Math.complex)">
+            <summary>余接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.sec(mwg.Math.complex)">
+            <summary>正割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.cosec(mwg.Math.complex)">
+            <summary>余割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.vers(mwg.Math.complex)">
+            <summary>正矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.covers(mwg.Math.complex)">
+            <summary>余矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.sinh(mwg.Math.complex)">
+            <summary>双曲線正弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.cosh(mwg.Math.complex)">
+            <summary>双曲線余弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.tanh(mwg.Math.complex)">
+            <summary>双曲線正接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.coth(mwg.Math.complex)">
+            <summary>双曲線余接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.sech(mwg.Math.complex)">
+            <summary>双曲線正割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.cosech(mwg.Math.complex)">
+            <summary>双曲線余割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.versh(mwg.Math.complex)">
+            <summary>双曲線正矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.coversh(mwg.Math.complex)">
+            <summary>双曲線余矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.ln(mwg.Math.complex)">
+            <summary>自然対数(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log(mwg.Math.complex)">
+            <summary>常用対数(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log2(mwg.Math.complex)">
+            <summary>対数(底2)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log4(mwg.Math.complex)">
+            <summary>対数(底4)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log8(mwg.Math.complex)">
+            <summary>対数(底8)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log12(mwg.Math.complex)">
+            <summary>対数(底12)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log16(mwg.Math.complex)">
+            <summary>対数(底16)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log60(mwg.Math.complex)">
+            <summary>対数(底60)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log360(mwg.Math.complex)">
+            <summary>対数(底360)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.logi(mwg.Math.complex)">
+            <summary>対数(底i)(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.log(mwg.Math.complex,mwg.Math.complex)">
+            <summary>対数(複素数)</summary>
+            <param name="a">底</param><param name="x">数</param><returns>対数log_a(x)【a^log=x】</returns>
+        </member>
+        <member name="M:mwg.Math.complex.gd(mwg.Math.complex)">
+            <summary>Gudermann函数</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Tn(mwg.Math.complex,mwg.Math.complex)">
+            <summary>第一種Tschebyscheff(Chebychef)多項式 Tn(x)=cos(n arccos x)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Un_a(mwg.Math.complex,mwg.Math.complex)">
+            <summary>第二種Tschebyscheff(Chebychef)多項式 U*n(x)=sin(n arccos x)/√(1-x^2)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Un(mwg.Math.complex,mwg.Math.complex)">
+            <summary>第二種Tschebyscheff(Chebychef)函数 Un(x)=sin(n arccos x)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.inv(mwg.Math.complex)">
+            <summary>インボリュート函数;involute function</summary>
+        </member>
+        <member name="M:mwg.Math.complex.invr(mwg.Math.complex)">
+            <summary>極インボリュート函数;polar involute function</summary>
+        </member>
+        <member name="P:mwg.Math.complex.cnj">
+            <summary>共役複素数</summary>
+        </member>
+        <member name="P:mwg.Math.complex.abs">
+            <summary>絶対値</summary>
+        </member>
+        <member name="P:mwg.Math.complex.rec">
+            <summary>逆数</summary>
+        </member>
+        <member name="P:mwg.Math.complex.arg">
+            <summary>偏角</summary>
+        </member>
+        <member name="P:mwg.Math.complex.sqr">
+            <summary>平方根</summary>
+        </member>
+        <member name="P:mwg.Math.complex.tostring">
+            <summary>文字列型stringに変換</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.sin(mwg.Math.complex)">
+            <summary>逆正弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.cos(mwg.Math.complex)">
+            <summary>逆余弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.tan(mwg.Math.complex)">
+            <summary>逆正接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.cot(mwg.Math.complex)">
+            <summary>逆余接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.sec(mwg.Math.complex)">
+            <summary>逆正割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.cosec(mwg.Math.complex)">
+            <summary>逆余割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.vers(mwg.Math.complex)">
+            <summary>逆正矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.covers(mwg.Math.complex)">
+            <summary>逆余矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.sinh(mwg.Math.complex)">
+            <summary>逆双曲線正弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.cosh(mwg.Math.complex)">
+            <summary>逆双曲線余弦(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.tanh(mwg.Math.complex)">
+            <summary>逆双曲線正接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.coth(mwg.Math.complex)">
+            <summary>逆双曲線余接(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.sech(mwg.Math.complex)">
+            <summary>逆双曲線正割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.cosech(mwg.Math.complex)">
+            <summary>逆双曲線余割(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.versh(mwg.Math.complex)">
+            <summary>逆双曲線正矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.coversh(mwg.Math.complex)">
+            <summary>逆双曲線余矢(複素数)</summary>
+        </member>
+        <member name="M:mwg.Math.complex.Arc.gd(mwg.Math.complex)">
+            <summary>逆Gudermann函数・Lambert函数</summary>
+        </member>
+        <member name="M:mwg.Math.integer.GCM(System.Int32,System.Int32)">
+            <summary>最大公約数g.c.m.(greatest common measure)</summary>
+        </member>
+        <member name="M:mwg.Math.integer.LCM(System.Int32,System.Int32)">
+            <summary>最小公倍数l.c.m.(least common multiple/lowest common multiple)</summary>
+        </member>
+        <member name="M:mwg.Math.integer.reduction(System.Decimal@,System.Decimal@)">
+            <summary>約分</summary>
+        </member>
+        <member name="M:mwg.Math.integer.CEI(System.Double)">
+            <summary>天井ceiling</summary>
+        </member>
+        <member name="M:mwg.Math.integer.CEI(System.Double,System.Double)">
+            <summary>天井ceiling</summary>
+        </member>
+        <member name="M:mwg.Math.integer.CEI(System.Double,System.Double,System.Double)">
+            <summary>天井ceiling</summary>
+        </member>
+        <member name="M:mwg.Math.integer.CEIn(System.Double,System.Double)">
+            <summary>天井ceiling</summary>
+        </member>
+        <member name="M:mwg.Math.integer.FLR(System.Double)">
+            <summary>床floor</summary>
+        </member>
+        <member name="M:mwg.Math.integer.FLR(System.Double,System.Double)">
+            <summary>床floor</summary>
+        </member>
+        <member name="M:mwg.Math.integer.FLR(System.Double,System.Double,System.Double)">
+            <summary>床floor</summary>
+        </member>
+        <member name="M:mwg.Math.integer.FLRn(System.Double,System.Double)">
+            <summary>床floor</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROU(System.Double)">
+            <summary>四捨五入round</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROU(System.Double,System.Double)">
+            <summary>四捨五入round</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROU(System.Double,System.Double,System.Double)">
+            <summary>四捨五入round</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUn(System.Double,System.Double)">
+            <summary>四捨五入round</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUd(System.Double)">
+            <summary>切り捨てcutdown</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUd(System.Double,System.Double)">
+            <summary>切り捨てcutdown</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUd(System.Double,System.Double,System.Double)">
+            <summary>切り捨てcutdown</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUdn(System.Double,System.Double)">
+            <summary>切り捨てcutdown</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUu(System.Double)">
+            <summary>切り上げcutup</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUu(System.Double,System.Double)">
+            <summary>切り上げcutup</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUu(System.Double,System.Double,System.Double)">
+            <summary>切り上げcutup</summary>
+        </member>
+        <member name="M:mwg.Math.integer.ROUun(System.Double,System.Double)">
+            <summary>切り上げcutup</summary>
+        </member>
+        <member name="T:mwg.Math.constant">
+            <summary>
+            定数の集まり
+            </summary>
+        </member>
+        <member name="F:mwg.Math.constant.k">
+            <summary>Gauss Constant</summary>
+        </member>
+        <member name="F:mwg.Math.constant.EGamma">
+            <summary>Euler Constant</summary>
+        </member>
+        <member name="F:mwg.Math.constant.GGamma">
+            <summary>万有引力定数cm3/gs2</summary>
+        </member>
+        <member name="F:mwg.Math.constant.astroA">
+            <summary>天文単位km</summary>
+        </member>
+        <member name="F:mwg.Math.constant.c">
+            <summary>光速m/s</summary>
+        </member>
+        <member name="F:mwg.Math.constant.ae">
+            <summary>地球赤道半径km</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Jz">
+            <summary>地球扁平率1/298</summary>
+        </member>
+        <member name="F:mwg.Math.constant.GE">
+            <summary>地心重力定数m3/s2</summary>
+        </member>
+        <member name="F:mwg.Math.constant.eta1900">
+            <summary>黄道傾斜 deg</summary>
+        </member>
+        <member name="F:mwg.Math.constant.N">
+            <summary>衝動定数 sec.</summary>
+        </member>
+        <member name="F:mwg.Math.constant.sun">
+            <summary>太陽定数cal/min.cm2</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Boltsmannk">
+            <summary>Boltsmann Constant J/K</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Stefan_Boltsmann_sigma">
+            <summary>Stefan=Boltsman Constant</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Plankh">
+            <summary>プランク定数J/Hz</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Plankh_">
+            <summary>プランク定数h_bar</summary>
+        </member>
+        <member name="F:mwg.Math.constant.c1">
+            <summary>第一放射定数Wm2</summary>
+        </member>
+        <member name="F:mwg.Math.constant.c2">
+            <summary>第二放射定数mK</summary>
+        </member>
+        <member name="F:mwg.Math.constant.alpha">
+            <summary>微細構造定数</summary>
+        </member>
+        <member name="F:mwg.Math.constant.alpha_recip">
+            <summary>微細構造定数</summary>
+        </member>
+        <member name="F:mwg.Math.constant.R8">
+            <summary>Rydberg Constant</summary>
+        </member>
+        <member name="F:mwg.Math.constant.NA">
+            <summary>Avogadro Number /mol</summary>
+        </member>
+        <member name="F:mwg.Math.constant.F">
+            <summary>Falad Constant C/mol</summary>
+        </member>
+        <member name="F:mwg.Math.constant.R">
+            <summary>気体定数 J/mol K</summary>
+        </member>
+        <member name="F:mwg.Math.constant.v1">
+            <summary>第一宇宙速度km/s</summary>
+        </member>
+        <member name="F:mwg.Math.constant.v2">
+            <summary>第二宇宙速度km/s</summary>
+        </member>
+        <member name="F:mwg.Math.constant.v3">
+            <summary>第三宇宙速度km/s</summary>
+        </member>
+        <member name="F:mwg.Math.constant.u">
+            <summary>原子量kg</summary>
+        </member>
+        <member name="F:mwg.Math.constant.e">
+            <summary>電気素量C</summary>
+        </member>
+        <member name="F:mwg.Math.constant.e2">
+            <summary>電子比電荷 me C/kg</summary>
+        </member>
+        <member name="F:mwg.Math.constant.a0">
+            <summary>ボーア半径</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Vm">
+            <summary>理想気体標準体積 m3/mol</summary>
+        </member>
+        <member name="F:mwg.Math.constant.Phi0">
+            <summary>磁束量子 Wb</summary>
+        </member>
+        <member name="F:mwg.Math.constant.eta0">
+            <summary>真空誘電率 F/m</summary>
+        </member>
+        <member name="F:mwg.Math.constant.moon.mu">
+            <summary>月対地質量比1/81.3</summary>
+        </member>
+        <member name="F:mwg.Math.constant.moon.n">
+            <summary>月対恒平均運動/s</summary>
+        </member>
+        <member name="F:mwg.Math.constant.moon.p">
+            <summary>月歳差運動 sec.</summary>
+        </member>
+        <member name="T:mwg.Math.constant.m">
+            <summary>質量kg</summary>
+        </member>
+        <member name="T:mwg.Math.constant.mu">
+            <summary>磁気 磁子 J/K</summary>
+        </member>
+        <member name="T:mwg.Math.constant.gamma">
+            <summary>磁子角運動量比 /sT</summary>
+        </member>
+        <member name="T:mwg.Math.constant.labmda">
+            <summary>コンプトン波長</summary>
+        </member>
+        <member name="T:mwg.Math.trigonomic">
+            <summary>
+            <para>public class tri</para>
+            <para>三角関数 逆三角関数</para>
+            <para>双曲線関数 逆双曲線関数</para>
+            <para>角度・弧度の変換</para>
+            </summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.sin(System.Double)">
+            <summary>正弦</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.cos(System.Double)">
+            <summary>余弦</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.tan(System.Double)">
+            <summary>正接</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.cot(System.Double)">
+            <summary>余接</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.sec(System.Double)">
+            <summary>正割</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.cosec(System.Double)">
+            <summary>余割</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.vers(System.Double)">
+            <summary>正矢</summary>
+        </member>
+        <member name="M:mwg.Math.trigonomic.covers(System.Double)">
+            <summary>余矢</summary>
+        </member>
+    </members>
+</doc>
