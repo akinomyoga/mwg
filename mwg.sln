@@ -1,0 +1,56 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{92AE361D-AA3D-47F4-90F3-1907CE26F2DE}"
+	ProjectSection(SolutionItems) = preProject
+		mwgDictionary.txt = mwgDictionary.txt
+		mwqFile計画.txt = mwqFile計画.txt
+		..\Binary Viewer\Binary Viewer\計画書poke.txt = ..\Binary Viewer\Binary Viewer\計画書poke.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwgDictionary", "mwg.Dictionary\mwgDictionary.csproj", "{16212342-EDF8-469F-A5C8-2F2C7605E45B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwgBinary", "Binary Viewer\mwgBinary.csproj", "{D6DB5B4A-5AF1-4FE6-A599-811756B16D3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwgTextReader", "mwg.TextReader\mwgTextReader.csproj", "{9997C578-C5C7-4343-B285-3798F48B95FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwg.Control", "mwg.Controls\mwg.Control.csproj", "{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mwg", "mwg\mwg.csproj", "{98878813-353D-4858-B44B-E4D43C90B933}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Debug", "Debug\Debug.csproj", "{238CACC0-21E2-4F0A-B3F9-708092DD6E6A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16212342-EDF8-469F-A5C8-2F2C7605E45B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16212342-EDF8-469F-A5C8-2F2C7605E45B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16212342-EDF8-469F-A5C8-2F2C7605E45B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16212342-EDF8-469F-A5C8-2F2C7605E45B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6DB5B4A-5AF1-4FE6-A599-811756B16D3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6DB5B4A-5AF1-4FE6-A599-811756B16D3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6DB5B4A-5AF1-4FE6-A599-811756B16D3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6DB5B4A-5AF1-4FE6-A599-811756B16D3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9997C578-C5C7-4343-B285-3798F48B95FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98878813-353D-4858-B44B-E4D43C90B933}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98878813-353D-4858-B44B-E4D43C90B933}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98878813-353D-4858-B44B-E4D43C90B933}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98878813-353D-4858-B44B-E4D43C90B933}.Release|Any CPU.Build.0 = Release|Any CPU
+		{238CACC0-21E2-4F0A-B3F9-708092DD6E6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{238CACC0-21E2-4F0A-B3F9-708092DD6E6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{238CACC0-21E2-4F0A-B3F9-708092DD6E6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{238CACC0-21E2-4F0A-B3F9-708092DD6E6A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

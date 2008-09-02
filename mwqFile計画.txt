@@ -1,0 +1,245 @@
+mwqIffについて
+
+概要 目的
+
+●内部にディレクトリ構造を有し、細かい枝分かれ的な情報を管理する。
+●画像などの基本的な情報の種類に対しては独自の形式を有する。ファイルをそのまま取り込んで書庫的な役割を担う事も出来る。
+●枝ごとに、圧縮及び暗号化などについても、今後考慮に入れる。
+
+
+------------------------------<ver 0.1>------------------------------
+
+▼内部の構造
+
+例:
+
+ヘッダ(親ディレクトリ)
+├ディレクトリ
+│├ディレクトリ
+│├ファイル
+│└データ
+├ファイル
+│└データ
+└データ
+
+情報の管理構造
+　ディレクトリ構造、つまり樹状構造を取る。
+　各要素の性格としては、「ヘッダは根、ディレクトリは節、ファイルは葉、データは属性」と考えると分かりやすい。
+
+　ヘッダを階層構造の一番上とし、その下にディレクトリ、ファイル、データが来る(空でも良い)。
+　ディレクトリの下には、ディレクトリ、ファイル、データが来る事が出来る(空でも良い)。
+　ファイルの下にはデータが来る。ファイルの中身は、ファイルの内に含まれる。データはあくまで付属的な情報、つまり属性である。
+　データは必ず構造の末端にあり、子孫は持ち得ない。データは独立した情報ではなくて、親要素の属性として扱う。
+　
+　利用者にとっては、ファイルが末端構造となる。しかし、実際の管理に於いては、ファイルもデータを持ちうるからデータが末端構造である。
+　
+符号化
+　木にして表した時(*)に、一番上に来る物から順にコーディングする。
+  
+  *簡単に言えば、エクスプローラの「フォルダ」を見た時に表示される、+ とか - で展開したりまとめたり出来るあの画面に表示されている物。
+   比較的厳密に言えば、家族を「先ず親があり、次に長子の家族が来て、次に次子の家族が来て、…、末子の家族が来る」ものとして定義し、
+   MIFFファイル全体をヘッダを親とする拡大家族と見なす物とする。
+
+　要素の種類(ディレクトリかファイルかデータか)は識別子によって識別する。
+　子要素のうち、「ディレクトリを先にしてファイルを次にしてデータを最後に」と言うような順番は規定しない。つまり、任意の順番で並べて良い。
+　然し効率化を図るのなら、ディレクトリを先にする方がよいかも知れない。が、これは利用者に任せる。
+　
+　各要素の内部のデータ構造は下に示す。
+
+
+▼各要素
+
+#定義の前に
+
+string{
+	dword len
+	bin[] data
+}#必ずしも文字列を意味するとは限らない。長さを設定できるひも状のデータと考えるのが宜しい。
+
+time{
+	dword dsec
+}#年月日時分秒デシ秒を記録(5B)
+
+
+#定義の本体
+
+header{
+	fourcc 識別子='mIFF'
+	dword version
+	string ディレクトリ名
+	dword Made #作成日時
+	dword lastModified #更新日時
+	string data #付随する情報、解説文書(html)、データその他
+	dword postLen #子孫のデータの長さ[B]
+}
+
+dir{
+	fourcc 識別子='DIR 'を初めディレクトリの用途別に設定(未定)
+	string ディレクトリ名
+	time Made
+	time lastModified
+	string data #付随する情報、解説文書(html)、データその他
+	dword postLen #子孫のデータの長さ[B]
+}
+
+file{
+	fourcc 識別子='FILE'
+	string ファイル名
+	time Made
+	time lastModified
+	string content #本体
+	dword postlen
+}
+data{
+	fourcc 識別子 #データのタイプを既定、これは使用者が勝手に決める(勿論他の要素の識別子と重ならないように設定する)
+	string data #データ本体
+}
+
+▼実装
+mwgIff
+	mwgIffData
+	mwgIffDataArray
+	mwgIffDir
+	mwgIffNode
+	mwgIffFile
+	mwgIffNodeArray
+mfBytes
+mfString
+mfTime
+mwgDword
+mwgFourcc
+
+
+------------------------------<ver 0.2>------------------------------
+
+▼内部の構造 : 基本的に変更しない
+▼各要素
+　基本的な考え方は変更しない。しかし、曖昧な点・不親切な点があり、どのように構造化されるかが明確でなかった為、実装と併せて再度定義する
+　※data に大きな変更あり。(識別子の統一化とデータ名の分離。下記参照↓)
+
+#先ず
+#	以下の物は変更しない
+	string;		#mbString として実装
+	time;		#mbDateTime として実装
+#	以下の物の実装も挙げることにする
+	uint;		#mbUInt32 として実装
+	fourcc;		#mbFourcc として実装
+	bytes;		#mbBytes として実装
+	
+#定義
+
+header{
+	fourcc	識別子='mIFF'
+	uint	version
+	string	文書名、ファイル内部名
+	time	Made #作成日時
+	time	lastModified #更新日時
+	string	annex #付随する情報、解説文書(html)、データその他
+	nodes	node
+}
+
+nodes{
+	uint postLen #全データの長さ(この、uint 自体は含まない)
+	*node nodearray
+}#mwgIff2.NodeArray として実装
+
+abstract node{
+	fourcc	ID		#識別子
+	string	name	#ディレクトリ、ファイルの名前
+}
+
+dir:node{
+	#ID		識別子='DIR 'を初めディレクトリの用途別に設定(未定)
+	time	Made
+	time	lastModified
+	string	annex #付随する情報、解説文書(html)、データその他
+	nodes	node
+}
+
+file:node{
+	#ID		識別子='FILE'
+	time	Made
+	time	lastModified
+	bytes	content #本体
+	nodes	data #data だけを許す
+}
+
+data:node{
+	#fourcc	ID		識別子='DATA'
+	#name	データのタイプを既定、これは使用者が勝手に決める(勿論他の要素の識別子と重ならないように設定する)
+	bytes	data	#データ本体を格納する
+}
+
+▼実装 : 実装は大きく変更する事にする。
+
+mwgIff2:mb
+	Node	:mb
+	Dir		:Node
+	File	:Node
+	Data	:Node
+	NodeArray:mb
+mb
+mbBool		:mb
+mbBytes		:mb
+mbDateTime	:mb
+mbFourcc	:mb
+mbInt32		:mb
+mbString	:mb
+mbUInt32	:mb
+
+//(必要があれば)mb系統の定義は別の所で行う
+
+
+▼細かい機能
+
+　読込時に、postLen を確認する機構を用意する。もし誤っていたら、ログに記録して、mwgBinary の Set で正しい位置に移動。
+　削除、追加、変更などを実装。
+　mwgIff2 及び Dir, File は
+　	path から配下のノードを返す関数を再起的に定義。見つからなかったら、エラー。
+　	はインデクサを実装。子ノードにアクセス出来るようにする。
+　	子ノードは出来るだけ整列しておく -- 検索効率の為
+　検索機能を実装
+　	ファイル名・ディレクトリ名の検索
+　	内容・データ内の検索
+　ディレクトリ構造がどうなっているか、TreeNode オブジェクトにして提出。(それぞれの TreeNode には　path を持たせる。か、参照)
+
+▼mb Class Series 概要　
+
+mbクラスの目的:
+	mwgBinary に色々な種類の情報を格納したい時に、
+	このクラスを通じてそれを行います。
+方法:
+	このクラスの Write メソッドによって mwgBinary に情報を書き込みます
+	コンストラクタによって、mwgBinary から情報を読み込んでインスタンスを作成します
+
+mb の派生クラスでは以下の物を実装する{
+	//constructor
+	*public mb(mwgBinary mbin)
+	*public mb(byte[] bin)
+	#public mb(type a)
+	
+	//methods and properties
+	public override byte[] ToBinary();
+	public virtual mwg.File.mwgBinary ToMwgBinary();
+	public override int Length{get;}
+	
+	//operator
+	#public static explicit operator type(mb mbin);
+	#public static explicit operator mb(type a);
+	*public static explicit operator mb(byte[] a){return new mb(a);}
+	*public static explicit operator mb(mwg.File.mwgBinary a){return new mb(a);}//※
+	
+	//※ ref 渡しが途中で途切れているので、ちゃんと参照型として働いているか確認する。
+	//    → 【解決済】参照型として働いている事を確認したので、ref 渡しはしない事にした
+	//* の印を付けた物は、特に abstract で宣言していないので、欠かさぬよう注意しなければならない。
+	//# の印を付けた物は、特に対応するデータ型がある場合に、それとの相互変換を保証する為に記述する事。
+}
+	
+▼今後の予定
+　ファイルなどから読み込む時、一度に読み込むのではなくて、必要になったら読み込むという方法をとる
+　　NodeArray は必要が出て来るまで、内容を byte[] として保持する。必要が出てきたら、Node のインスタンス群を作成する。
+　　annex など大きなサイズが予想される物は同様に読込を待つ。
+
+
+------------------------------<ver 0.3>------------------------------
+

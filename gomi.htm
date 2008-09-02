@@ -1,0 +1,275 @@
+//<!--
+/*-->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=shift_jis"/>
+<style>
+xmp{background-color:#fef}
+</style>
+</head>
+<body>
+<b>場所:mwg.Drawing.StringDrawer</b>
+<!--*///--><xmp>
+class StringDrawer{
+		//GOMI:削除予定
+		private System.Drawing.Bitmap bmpCHAR_debug(ref int i,ref char[] text){
+			if(i>=text.Length)return this.bmpCHAR(" ");
+			//TODO:漢字の構成の記号に対応する(bool のプロパティを実装)
+			if(text[i]=='\x2ff0'){
+				//┌┬┐
+				//│││
+				//└┴┘
+				System.Drawing.Bitmap r=this.bmpCHAR("　");
+				System.Drawing.Graphics g=System.Drawing.Graphics.FromImage(r);
+				System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,r.Width/2f*1.1f,r.Height);
+				i++;
+				g.DrawImage(this.bmpCHAR(ref i,ref text),rect);
+				rect.X=(float)r.Width/2f*0.9f;
+				g.DrawImage(this.bmpCHAR(ref i,ref text),rect);
+				return r;
+			}
+			//中心文字の取得
+			string x=text[i++].ToString();
+			//修飾子の付加
+			while(i<text.Length){
+				if('\x300'<=text[i]&&text[i]<'\x370')x+=text[i].ToString();
+				else return this.bmpCHAR(x);
+				i++;
+			}
+			return this.bmpCHAR(x);
+		}//*/
+
+		//GOMI:削除予定
+		private System.Drawing.Bitmap bmpCHAR_debug(string text){
+			System.Drawing.SizeF size=this.bmp_Size(text);
+			if(size.Height==0||size.Width==0){
+				size.Height++;
+				size.Width++;
+				int code=(int)text.ToCharArray()[0];
+				System.Windows.Forms.MessageBox.Show("未知の文字コード:"+code.ToString());
+			}
+			System.Drawing.Bitmap r=new System.Drawing.Bitmap((int)size.Width,(int)size.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			System.Drawing.Graphics g=System.Drawing.Graphics.FromImage(r);
+			g.TextRenderingHint=this.g.TextRenderingHint;
+			g.Clear(System.Drawing.Color.Transparent);
+			if(this.Vertical){
+				g.DrawString(text,this.font,this.brush,-2,-2,StringDrawer.formatV);
+			}else{
+				g.DrawString(text,this.font,this.brush,-2,0);
+			}
+			return r;
+		}//*/
+		//GOMI:削除予定
+		private StringDrawer.Char bmpCHAR(string text){
+			return new Char(this,text);
+		}//*/
+
+		//GOMI:削除予定
+		private void DrawLetter(System.Drawing.Bitmap bmp){
+			//TODO:折り返し→横スクロール可能の時には使えない様にしないと変な事になる
+			//TODO:折り返し→途中で文字の大きさが変わった時の行送り
+			if(this.Vertical&&this.RTL){
+				//折り返し処理
+				if(this.Return&&this.Rectangle.Bottom<this.strPosition.Y+bmp.Height){
+					if(this.Rt())this.Lf();
+				}
+				//描画
+				this.g.DrawImageUnscaled(bmp,(int)(this.strPosition.X-bmp.Width),(int)(this.strPosition.Y));
+				this.strPosition.Y+=bmp.Height+this.LetterSpacing;
+			}else if(this.RTL){
+				//TEST:折り返し処理
+				if(this.Return&&this.Rectangle.Left>this.strPosition.X){
+					if(this.Rt())this.Lf();
+				}
+				this.g.DrawImageUnscaled(bmp,(int)(this.strPosition.X),(int)(this.strPosition.Y));
+				this.strPosition.X-=bmp.Width+this.LetterSpacing;
+			}else if(this.Vertical){
+				//折り返し処理
+				if(this.Return&&this.Rectangle.Bottom<this.strPosition.Y+bmp.Height){
+					if(this.Rt())this.Lf();
+				}
+				this.g.DrawImageUnscaled(bmp,(int)(this.strPosition.X-bmp.Width),(int)(this.strPosition.Y));
+				this.strPosition.Y+=bmp.Height+this.LetterSpacing;
+			}else{
+				//折り返し処理
+				if(this.Return&&this.Rectangle.Right<this.strPosition.X+bmp.Width){
+					if(this.Rt())this.Lf();
+				}
+				//描画
+				this.g.DrawImageUnscaled(bmp,(int)(this.strPosition.X),(int)(this.strPosition.Y));
+				this.strPosition.X+=bmp.Width+this.LetterSpacing;
+			}		
+		}//*/
+
+		//TODO:Char 内部に統合の予定
+		private StringDrawer.Char bmpCHAR(ref int i,ref char[] text){
+			if(i>=text.Length)return new Char(this," ");
+			//TODO:漢字の構成の記号に対応する(bool のプロパティを実装)
+			if(text[i]=='\x2ff0'){
+				//┌┬┐
+				//│││
+				//└┴┘
+				StringDrawer.Char r=new Char(this,"　");
+				System.Drawing.Graphics g=r.CreateGraphics();
+				System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,r.Width/2f*1.1f,r.Height);
+				i++;
+				g.DrawImage(this.bmpCHAR(ref i,ref text).bmp,rect);
+				rect.X=(float)r.Width/2f*0.9f;
+				g.DrawImage(this.bmpCHAR(ref i,ref text).bmp,rect);
+				return r;
+			}
+			//中心文字の取得
+			string x=text[i++].ToString();
+			//修飾子の付加
+			while(i<text.Length){
+				if('\x300'<=text[i]&&text[i]<'\x370')x+=text[i].ToString();
+				else return new Char(this,x);
+				i++;
+			}
+			return new Char(this,x);
+		}//*/
+
+		//GOMI:削除予定
+		/// <summary>
+		/// 文字の領域の大きさを取得します。
+		/// これは、実際に描画される文字の大きさではありません。
+		/// 例えば斜体の時は、文字の右上の部分は「文字の領域」の外側に突き出す事になります。
+		/// </summary>
+		/// <param name="text">対象の文字</param>
+		private System.Drawing.SizeF bmp_Size(string text){
+			if(text==" "||text=="")text="x";else if(text=="　")text="空";
+			if(this.Vertical){
+				System.Drawing.SizeF size=this.g.MeasureString("x"+text,this.font,point0,formatV);
+				size.Width=(int)size.Width;
+				size.Height=(int)(size.Height-this.bmp_sizeX.Height);
+				return size;
+			}else{
+				System.Drawing.SizeF size=this.g.MeasureString("x"+text,this.font);
+				size.Width=(int)(size.Width-this.bmp_sizeX.Width);
+				size.Height=(int)size.Height;
+				return size;
+			}
+		}//*/
+}//</xmp><!--
+/*--><hr/>
+<b>場所:mwg.Drawing.StringDrawer.Char->Char</b>
+<!--*///--><xmp>
+class Char{
+	Char(){
+				if(text[i]==CMB_LR){
+					this.initialize(parent,"　");
+					//┌┬┐
+					//│││
+					//└┴┘
+					System.Drawing.Graphics g=this.CreateGraphics();
+					System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,this.bmp.Width/2f*INFLATE,this.bmp.Height);
+					i++;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.X=this.Width/2f*CLOSE;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					return;
+				}else if(text[i]==CMB_TB){
+					this.initialize(parent,"　");
+					//┌─┐
+					//├─┤
+					//└─┘
+					System.Drawing.Graphics g=this.CreateGraphics();
+					System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,this.bmp.Width,this.bmp.Height/2f*INFLATEV);
+					i++;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.Y=this.Height/2f*CLOSEV;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					return;
+				}else if(text[i]==CMB_LCR){
+					this.initialize(parent,"　");
+					//┌┬┬┐
+					//││││
+					//└┴┴┘
+					System.Drawing.Graphics g=this.CreateGraphics();
+					System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,this.bmp.Width/3f*INFLATE,this.bmp.Height);
+					i++;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.X=this.Width/3f*CLOSE;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.X*=2f;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					return;
+				}else if(text[i]==CMB_TMB){
+					this.initialize(parent,"　");
+					//┌─┐
+					//├─┤
+					//├─┤
+					//└─┘
+					System.Drawing.Graphics g=this.CreateGraphics();
+					System.Drawing.RectangleF rect=new System.Drawing.RectangleF(0,0,this.bmp.Width,this.bmp.Height/3f*INFLATEV);
+					i++;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.Y=this.Height/3f*CLOSEV;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					rect.Y*=2f;
+					g.DrawImage(new Char(parent,ref i,ref text).bmp,rect);
+					return;
+				}else if(text[i]==CMB_OI){
+					this.initialize(parent,"　");
+					//┌─┐
+					//│口│
+					//└─┘
+					i++;
+					System.Drawing.Graphics g=this.CreateGraphics();
+					g.DrawImageUnscaled(new Char(parent,ref i,ref text).bmp,0,0);
+					this.DrawChar(g,new Char(parent,ref i,ref text),0.15f,0.15f,0.7f,0.7f);
+					return;
+				}else if(text[i]==CMB_OB){
+					this.initialize(parent,"　");
+					//┌──┐
+					//│┌┐│
+					//└┴┴┘
+					i++;
+					System.Drawing.Graphics g=this.CreateGraphics();
+					g.DrawImageUnscaled(new Char(parent,ref i,ref text).bmp,0,0);
+					this.DrawChar(g,new Char(parent,ref i,ref text),0.25f,0.5f,0.5f,0.5f);
+					return;
+				}else if(text[i]==CMB_OT){
+					this.initialize(parent,"　");
+					//┌┬┬┐
+					//│└┘│
+					//└──┘
+					i++;
+					System.Drawing.Graphics g=this.CreateGraphics();
+					g.DrawImageUnscaled(new Char(parent,ref i,ref text).bmp,0,0);
+					this.DrawChar(g,new Char(parent,ref i,ref text),0.15f,0f,0.7f,0.7f);
+					return;
+				}else if(text[i]==CMB_OR){
+					this.initialize(parent,"　");
+					//┌─┐
+					//│┌┤
+					//│└┤
+					//└─┘
+					i++;
+					System.Drawing.Graphics g=this.CreateGraphics();
+					g.DrawImageUnscaled(new Char(parent,ref i,ref text).bmp,0,0);
+					this.DrawChar(g,new Char(parent,ref i,ref text),0.3f,0.15f,0.7f,0.7f);
+					return;
+				}//*/
+	}
+}//</xmp><hr/><xmp>
+class IME{
+		public void SetCompositionFont(System.Drawing.Font font){
+			try{
+				System.IntPtr hImc=this.hIMC;
+				object lf2=new LOGFONT();
+				font.ToLogFont(lf2);
+				LOGFONT lf=(LOGFONT)lf2;
+				byte[] bytes=System.Text.Encoding.Default.GetBytes(font.Name);
+				for(int i=0;i<lf.lfFaceName.Length;i++){
+					lf.lfFaceName[i]=(i>=bytes.Length)?(byte)0:bytes[i];
+				}
+				ImmSetCompositionFont(hImc,ref lf);
+			}catch(System.Exception e){throw e;}
+		}
+		public void SetCompositionFont(mwg.Windows.LOGFONT font){
+			try{
+				ImmSetCompositionFont(this.hIMC,ref font);
+			}catch(System.Exception e){throw e;}
+		}
+}//</xmp></body></html>
