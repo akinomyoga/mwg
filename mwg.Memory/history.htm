@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<title>mwg.Memory 開発記録</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<link rel="stylesheet" type="text/css" charset="utf-8" href="file://C:/Documents and Settings/koichi/デスクトップ/Script/mwg2/mwg.std.css" />
+<style type="text/css">
+h1{font-family:"Times New Roman","MS PMincho"}
+pre.cs{background-color:#f8fff8;padding:1ex;border:1px solid silver;}
+hr{height:1px;}
+</style>
+</head>
+<body>
+<h1>mwg.Memory 開発記録</h1>
+<h2>RemotePtr&lt;T&gt; の読み書きについて</h2>
+<h3>Buffer of (任意の構造体→UnmanagedMemory) - 2008.08.31</h3>
+<p>一々 UnmanagedMemory に転送しなくても local 変数としてアドレスを取得出来そうな物である。
+所が Generics の型パラメータで指定した構造体ではそれが出来ない。
+そこで、パフォーマンスを下げることとなろうが、他の固定可能なメモリに転送する必要がある。</p>
+<ol>
+<li>byte[] を lock / fix
+<pre class="cs">
+private static readonly byte[] buffer=new byte[size];
+public static T Read(ProcessMemory mem,void* addr){
+	lock(buffer)fixed(byte* p=buffer){
+		mem.ReadMemory(addr,p,size);
+		return (T)Interop::Marshal.PtrToStructure((System.IntPtr)p,typeof(T));
+	}
+}
+public static void Write(ProcessMemory mem,void* addr,T value){
+	lock(buffer)fixed(byte* p=buffer){
+		Interop::Marshal.StructureToPtr(value,(System.IntPtr)p,false);
+		mem.WriteMemory(addr,p,size);
+	}
+}
+</pre>
+	<p>この方法だと、毎回 lock 及び fix を実行しなければならない。
+	これは、overhead になるのではないか?</p>
+</li>
+<li>stackalloc
+<pre class="cs">
+public static T Read(ProcessMemory mem,void* addr){
+	byte* p=stackalloc byte[size];
+	mem.ReadMemory(addr,p,size);
+	return (T)Interop::Marshal.PtrToStructure((System.IntPtr)p,typeof(T));
+}
+public static void Write(ProcessMemory mem,void* addr,T value){
+	byte* p=stackalloc byte[size];
+	Interop::Marshal.StructureToPtr(value,(System.IntPtr)p,false);
+	mem.WriteMemory(addr,p,size);
+}
+</pre>
+	<p>こちらの方法だと、大きな構造体を扱う際に StackOverFlow の危険性を伴う。</p>
+</li>
+<li>GlobalHAlloc で確保した場所に転送するなど他にも色々</li>
+</ol>
+<p>実際に Read の方で速度を測定してみた所、大して速くなると言うわけでもなかった。
+T=byte について buffer を lock/fix して使用だと 37ms 位。stackalloc で 1ms 程度縮まると言う位。(比率にして 2-3%)</p>
+
+<div class="note">
+<p>一方で stackalloc の限界の大きさであるが、段々大きな値を確保する様に変更していって試した所、
+512KB では大丈夫だったのが 1MB では StackOverFlow を起こした。
+</p>
+<p>従って呼び出しが深い場合でも 50KB 程度の stackalloc ならば問題ないと言える。
+もしそれで overflow してしまうのであれば、
+stackalloc を使わなくても一割程度しか Stack に余裕を残していないと言うことで、
+別の一寸した理由で直ぐに overflow してしまう様になるであろう。
+</p>
+<p>50KB の構造体が存在するであろうか?
+50KB の構造体のメンバの数を考えて見る。
+alignment を考えて 1 メンバ 8B で計算すると 6400 のメンバを保有していることになる。
+構造体のメンバとして別の構造体を含めていった場合でも、これだけ大きな構造体というのはなかなかない。
+存在しないと言い切っても良いかも知れない。
+</p>
+</div>
+
+<p>良く考えてみたら、それだけ巨大な構造体が存在すればローカル変数としてその構造体を扱うだけで overflow してしまう。
+stackalloc は、単なる「その構造体をローカル変数としてもう一つ宣言するという操作」と等価である。</p>
+<p>結局、余り高速化は期待出来ないが、stackalloc でもそれ程危険は無さそうなので stackalloc を使用する方に切り替える。
+</p>
+<!--=================================================================-->
+<h2>Regular Expressions について</h2>
+<p>→afh.dll に移動した。</p>
+</body>
+</html>

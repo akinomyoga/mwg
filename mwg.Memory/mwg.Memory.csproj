@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BEC59D00-1AC1-4229-8875-AB6D328D85D3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>mwg.Memory</RootNamespace>
+    <AssemblyName>mwg.Memory</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <Compile Include="..\..\mgdspy\mwg.Win32\mwg.Crt.cs">
+      <Link>mwg.Crt.cs</Link>
+    </Compile>
+    <Compile Include="..\..\mgdspy\mwg.Win32\mwg.Win32.DbgHelp.cs">
+      <Link>mwg.Win32.DbgHelp.cs</Link>
+    </Compile>
+    <Compile Include="..\..\mgdspy\mwg.Win32\mwg.Win32.Kernel32.cs">
+      <Link>mwg.Win32.Kernel32.cs</Link>
+    </Compile>
+    <Compile Include="..\..\mgdspy\mwg.Win32\mwg.WinNT_IMAGE.cs">
+      <Link>mwg.WinNT_IMAGE.cs</Link>
+    </Compile>
+    <None Include="[!tochu]Disassemble\Command.cs" />
+    <None Include="[!tochu]Disassemble\Disasm.cs" />
+    <None Include="[!tochu]Disassemble\ExperimentalOleh.cs" />
+    <Compile Include="InterProc\Event.cs" />
+    <None Include="[!]mwg.Win32.ERROR.cs" />
+    <Compile Include="InterProc\Module.cs" />
+    <None Include="InterProc\[!]RemotePtr.Type.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>[!]RemotePtr.Type.cs</DependentUpon>
+    </None>
+    <None Include="InterProc\ProcessMemory.Accessor.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>ProcessMemory.Accessor.gen.cs</LastGenOutput>
+    </None>
+    <Compile Include="InterProc\ProcessMemory.Accessor.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ProcessMemory.Accessor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="InterProc\RemotePtr.cs" />
+    <Compile Include="ProcessViewControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Properties\Debug.cs" />
+    <Compile Include="InterProc\ProcessMemory.cs" />
+    <None Include="Old\mwg.Imports.Memory.cs" />
+    <None Include="InterProc\[!]RemotePtr.Type.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>[!]RemotePtr.Type.gen.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\UnitTest.cs" />
+    <Compile Include="Properties\RegexTest.cs" />
+    <Compile Include="Properties\TestCompression.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Old\Memory.dll">
+    </None>
+    <EmbeddedResource Include="ProcessViewControl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ProcessViewControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="[!tochu]Disassemble\Command.xml" />
+    <Content Include="予定.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\afh\afh\afh.csproj">
+      <Project>{F4AFB459-96B1-4AB1-A8EF-DA8B272B9A0B}</Project>
+      <Name>afh</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\mwg.Compress\mwg.Compress.vcproj">
+      <Project>{3B89BBF1-97A9-48C1-A688-933F57B0B3DF}</Project>
+      <Name>mwg.Compress</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
+  </ItemGroup>
+</Project>
