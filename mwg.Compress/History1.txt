@@ -1,0 +1,650 @@
+//	uint get_bytes(int bytes){return 1;}
+//	void put_byte(byte value){}
+		int match_entry(Entry& entry,byte* const data){
+			/*
+			int dist=MASK_CACHE&icache+SZ_CACHE-entry.self;
+			if(0<dist&&dist<REF_LEN_BASE){
+				// 書き込むと共にキャッシュを上書きしてしまう場合
+			}
+			//*/
+			class loop_index{
+			private:
+				int value;
+			public:
+				loop_index(int value):value(value){}
+				int operator++(int){
+					int ret=value;
+					value=value+1&MASK_CACHE;
+					return ret;
+				}
+				operator int(){
+					return value;
+				}
+				loop_index():value(0){}
+				int operator++(){
+					return value=value+1&MASK_CACHE;
+				}
+				bool between(int start,int end){
+					if(start<=end)
+						return start<=value&&value<end;
+					else
+						return value<end||start<=value;
+				}
+			} i(entry.self);
+
+			int iDirty=0;
+			while(true){
+				// その時のキャッシュの値
+				byte c;
+				if(iDirty>=SZ_CACHE||i.between(icache,d_end)){
+					c=data[iDirty++];
+				}else{
+					c=cache[i++];
+					is_dirty=i==icache; // 一度 is_dirty となったら終了
+				}
+
+				if(data[iData]!=c)break;
+
+				iData++;
+				d_end++;
+			}
+		}
+
+///////////////////////////////////////////////////////////////////////////////
+	class Encoder{
+		OutStream* ostr;
+		Encoder(InStream& istr,OutStream& ostr)
+			:ostr(&ostr),put_bits_b(0),put_bits_ib(0)
+		{}
+#if FALSE
+		byte put_bits_b;
+		int put_bits_ib; // 次に書き込む位置
+		std::vector<byte> put_bits_waiter;
+		void put_bits(uint value,int bits=1){
+			byte& b=put_bits_b;
+			int& ib=put_bits_ib;
+			assert(1<=bits&&bits<=32);
+
+			/* OPT */
+			int i=0;
+			while(i<bits){
+				b|=(value>>i++&1)<<ib++;
+				if((ib&7)==0){
+					this->flush_bits();
+
+					while(bits-i>=8){
+						ostr->put_byte(byte(value>>i));
+						i+=8;
+					}
+				}
+			}
+		}
+		void put_byte(byte value){
+			// 丁度 bit が完成する迄待つ
+			if((put_bits_b&7)==0){
+				ostr->put_byte(value);
+			}else{
+				put_bits_waiter.push_back(value);
+			}
+		}
+		void flush_bits(){
+			ostr->put_byte(b);
+			if(!put_bits_waiter.empty()){
+				for(std::vector<byte>::iterator i=put_bits_waiter.begin();i!=put_bits_waiter.end();i++)
+					ostr->put_byte(*i);
+				put_bits_waiter.clear();
+			}
+			put_bits_b=0;
+			put_bits_ib=0;
+		}
+#endif
+	};
+	class Decoder{
+		Decoder(InStream& istr,OutStream& ostr)
+			:icache(0),ostr(&ostr)
+			,get_bits_b(0),get_bits_ib(0),istr(&istr)
+		{}
+	//================================================================
+	//		入力
+	//================================================================
+	private:
+		InStream* istr;
+		byte get_bits_b;//=0;
+		int get_bits_ib;//=0;
+		uint get_bits(int bits=1){
+			assert(1<=bits&&bits<=32);
+			byte& b=get_bits_b;
+			int& ib=get_bits_ib;
+
+			/* OPT */
+			// これは仮実装 (後でもっと高速化
+
+			
+			uint ret=0;
+			int ir=0;
+			do{
+				if((ib&=7)==0){
+					b=istr->get_byte();
+
+					// 8bit 以上ある時はまとめて加算
+					while(bits>=8){
+						ret|=b<<ir;
+						ir+=8;
+						bits-=8;
+						b=istr->get_byte();
+					}
+				}
+
+				ret|=(b>>ib++&1)<<ir++;
+			}while(--bits);
+
+			return ret;
+		}
+	};
+///////////////////////////////////////////////////////////////////////////////
+	class NibbleRangeEncoder{
+	public:
+		void terminate(){
+			// (r_s, r_s+r_l] の数で有効数字が最小の物は
+			//---------------------------------------------
+			// r_s     : xxxxxxxyyyyyyyy
+			// r_l     :        1zzzzzzz
+			// r_s+r_l : xxxxxxmmmmmmmmm
+			// 最小    : xxxxxx100000000 ∈ (r_s, r_s+r_l] ?
+			//        or xxxxxxx10000000 ∈ (r_s, r_s+r_l] ?
+			//---------------------------------------------
+			uint r_e=r_s+r_l;
+			// bw.write_bits(r_s>>B_RANGE,1); // 没
+			bw.terminate();
+		}
+	};
+*******************************************************************************
+	InStream と OutStream を指定してそれを繋ぐ方法から、
+	InStream 変換器としての動作に変更
+===============================================================================
+	class MZipEncoder:public InStream{
+	//----------------------------------------------------------------
+	//	メインループ - データ形式決定
+	//----------------------------------------------------------------
+	public:
+		void encode(){
+			init();
+
+			while(dat.length()>0){
+				next();
+			}
+
+			flush_raw();
+			bw.terminate();
+		}
+	};
+	class MZipDecoder{
+	//================================================================
+	//		デコーダ
+	//================================================================
+	public:
+		bool decode(){
+//			uint iBlk=get_bytes(BYTES_BLK_CNT);
+
+			try{
+				while(!br.is_end())switch(br.read_bits(B_BLK_TYP)){
+					case BLK_TYP_RAW: /* <ブロック RAW> */{
+						uint jM=RAW_LEN_BASE+br.read_bits(B_RAW_LEN);
+						for(uint j=0;j<jM;j++)
+							write(br.read_byte()); /* OPT */
+						break;
+					}
+					case BLK_TYP_REF: /* <ブロック REF> */{
+						int jcache=icache-1-br.read_bits(B_REF_ADR);
+						jcache=MASK_CACHE&(jcache+SZ_CACHE);
+						uint len=REF_LEN_BASE+br.read_bits(B_REF_LEN);
+
+						while(len--){
+							write(cache[jcache++]);
+							jcache&=MASK_CACHE;
+						}
+						break;
+					}
+					default:
+						__assume(false);
+				}
+			}catch(std::exception& e){
+				std::cout<<"Failed to Decode: "<<e.what()<<std::endl;
+				return false;
+			}
+			return true;
+		}
+	};
+
+	void compress(InStream& istr,OutStream& ostr);
+	void decompress(InStream& istr,OutStream& ostr);
+
+	void compress(InStream& istr,OutStream& ostr){
+		Encoder* encoder=new Encoder(istr,ostr);
+		encoder->encode();
+		delete encoder;
+	}
+
+	void decompress(InStream& istr,OutStream& ostr){
+		Decoder* decoder=new Decoder(istr,ostr);
+		decoder->decode();
+		delete decoder;
+	}
+
+void compress1(void* buff,std::size_t len){
+	printf("compressing ...\n");
+	mwg::Compress::FixedMemoryStream istr(buff,len);
+	mwg::Compress::VectorOStream ostr;
+	istr.print();
+	mwg::Compress::compress(istr,ostr);
+	ostr.print_hex();
+	::printf("\n");
+
+	printf("decompressing ...\n");
+	mwg::Compress::VectorIStream istr2(ostr.get_buffer());
+	mwg::Compress::StdoutStream ostr2;
+	mwg::Compress::decompress(istr2,ostr2);
+	::printf("\n\n");
+
+	printf("arithmetic compression ...\n");
+	istr.clear();istr2.clear();ostr.clear();
+	mwg::Compress::NibbleRangeEncoder nre(istr);
+	while(!nre.eos())ostr.put_byte(nre.get_byte());
+	ostr.print();
+	printf("\n");
+
+	printf("arithmetic expansion ...\n");
+	mwg::Compress::VectorIStream istr3(ostr.get_buffer());
+	mwg::Compress::NibbleRangeDecoder nrd(istr3);
+	ostr.clear();
+	while(!nrd.eos())ostr.put_byte(nrd.get_byte());
+	ostr.print();
+	printf("\n");
+}
+*******************************************************************************
+	算術圧縮の区間の取り方を変更 ( , ] → [ , )
+===============================================================================
+	class NibbleRangeEncoder{
+		// 元々
+		void terminate(){
+			if(terminated)return;
+			terminated=true;
+			// (r_s, r_e] の数で有効数字が最小の物は
+			//---------------------------------------------
+			// r_s     : xxxxxxx0yyyyyyy
+			// r_e     : xxxxxxx1zzzzzzz
+			// 最小    : xxxxxxx10000000 ∈ (r_s, r_s+r_l]
+			//---------------------------------------------
+			bw.write_bits(1,1);
+			bw.terminate();
+			bw.write_byte(count);
+		}
+
+		// 改1
+		void terminate(){
+			if(terminated)return;
+			terminated=true;
+			if((r_e&MSK_RANGE)!=MSB_RANGE){
+				bw.write_bits(1,1);
+			}else{
+				int b=0;
+				int ib=1;
+
+				r_s<<=1;
+				while(r_s&MSB_RANGE){
+					b|=1<<ib++;
+					r_s<<=1;
+				}
+				if(r_s&MSK_RANGE)
+					b|=1<<ib++;
+
+				bw.write_bits(b,ib);
+			}
+			bw.terminate();
+			bw.write_byte(count);
+		}
+			
+		// 改2
+		void terminate(){
+			if(terminated)return;
+			terminated=true;
+			if((r_e&MSK_RANGE)!=MSB_RANGE){
+				bw.write_bits(1,1);
+			}else{
+				r_e--;
+				flush();
+				if(r_s&MSK_RANGE)
+					bw.write_bits(1,1);
+			}
+			bw.terminate();
+			bw.write_byte(count);
+		}
+	};
+
+	class NibbleFrequency{
+	public:
+		nibble search_range(uint r,uint& r_s,uint& r_e){
+			/*
+			uint len=r_e-r_s;
+			nibble nib=0;
+			while(nib<16&&r_s+(len*cuml[nib+1]>>cuml_w)<r)nib++;
+			select_range(nib,r_s,r_e);
+			return nib;
+			/*/
+			
+			// *** OPTIMIZED ***
+			// ×未だ読み取っていない桁も考えると、
+			// 　r_ofs_true=r_ofs+ε (ε<1)
+			// 　このεによって間違いが生ずる。
+			// ×更に Encode 時は len*cuml[nib_c]
+			// 　の >>cuml_w した端数を無視して計算したが、
+			// 　以下の様にすると端数の違いが出てしまう。
+			uint len=r_e-r_s;
+			uint r_ofs=(r-r_s)<<cuml_w;
+			nibble nib_l=0;
+			nibble nib_u=16;
+			// 二分探索 in [nib_l, nib_u)
+			while(nib_l+1!=nib_u){
+				nibble nib_c=(nib_l+nib_u)>>1;
+				if(len*cuml[nib_c]<r_ofs)
+					nib_l=nib_c;
+				else
+					nib_u=nib_c;
+				if(len*cuml[nib_c]<r_ofs)
+					nib_l=nib_c;
+				else
+					nib_u=nib_c;
+			}
+		}
+	};
+*******************************************************************************
+	StreamConnector を使って分かり易く書き換え
+===============================================================================
+	void MZipCompressFile(const char* sourceFile,const char* destinationFile){
+		typedef mwg::Stream::InStream InStream;
+
+		mwg::Stream::WriteFileStream ostr(destinationFile);
+
+		mwg::Stream::ReadFileStream istr(sourceFile);
+		InStream* pstr1=new MZipEncoder(istr);
+		InStream* pstr2=new NibbleRangeEncoder(*pstr1);
+		while(!pstr2->eos())
+			ostr.put_byte(pstr2->get_byte());
+		delete pstr2;
+		delete pstr1;
+	}
+
+	void MZipDecompressFile(const char* sourceFile,const char* destinationFile){
+		typedef mwg::Stream::InStream InStream;
+
+		mwg::Stream::WriteFileStream ostr(destinationFile);
+
+		mwg::Stream::ReadFileStream istr(sourceFile);
+		InStream* pstr0=new mwg::Stream::StdoutPipe(istr);
+		InStream* pstr1=new NibbleRangeDecoder(*pstr0);
+		InStream* pstr2=new MZipDecoder(*pstr1);
+		while(!pstr2->eos())
+			ostr.put_byte(pstr2->get_byte());
+		delete pstr2;
+		delete pstr1;
+		delete pstr0;
+	}
+
+	// デバグ用の関数
+	void MZipTestFile(const char* sourceFile,const char* destinationFile);
+	void MZipTestFile(const char* sourceFile,const char* destinationFile){
+		mwg::Stream::ReadFileStream istr(sourceFile);
+		mwg::Stream::WriteFileStream ostr(destinationFile);
+
+		mwg::Stream::InStreamConnector connector(istr);
+		connector
+			>>mwg::Stream::InStreamCreator<MZipEncoder>()
+			>>mwg::Stream::InStreamCreator<NibbleRangeEncoder>()
+			>>mwg::Stream::InStreamCreator<mwg::Stream::StdoutPipe>()
+			>>mwg::Stream::InStreamCreator<NibbleRangeDecoder>()
+			>>mwg::Stream::InStreamCreator<MZipDecoder>()
+			>>(mwg::Stream::OutStream&)ostr;
+	}
+*******************************************************************************
+	算術圧縮の区間の表現を変更 (r_s ,r_e)  → (r_s, r_l)
+===============================================================================
+		void select_range(byte nib,uint& r_s,uint& r_e){
+			uint len=r_e-r_s;
+			r_e=r_s+(len*cuml[(nib&=0xF)+1]>>cuml_w);
+			r_s=r_s+(len*cuml[nib]>>cuml_w);
+			mwg::break_assert(r_s<r_e);
+		}
+		nibble search_range(uint r,uint& r_s,uint& r_e){
+			// *** OPTIMIZED ***
+			uint len=r_e-r_s;
+			r-=r_s;
+			nibble nib_l=0;
+			nibble nib_u=16;
+			// 二分探索 in [nib_l, nib_u)
+			while(nib_l+1!=nib_u){
+				nibble nib_c=(nib_l+nib_u)>>1;
+				if(len*cuml[nib_c]>>cuml_w<=r)
+					nib_l=nib_c;
+				else
+					nib_u=nib_c;
+			}
+			r_e=r_s+(len*cuml[nib_u]>>cuml_w);
+			r_s=r_s+(len*cuml[nib_l]>>cuml_w);
+			return nib_l;
+		}
+	};
+	//****************************************************************
+	//		4bit 単位算術圧縮定数
+	//================================================================
+	class NibbleRC{
+	private:
+		NibbleRC();
+		NibbleRC(const NibbleRC&);
+	public:
+		static const int B_FREQ		=9;
+		static const int B_RANGE	=32-B_FREQ;
+		static const int SZ_RANGE	=1<<B_RANGE;
+		static const int MSB_RANGE	=SZ_RANGE>>1;
+		static const int MSK_RANGE	=SZ_RANGE-1;
+	};
+	//****************************************************************
+	//		4bit 単位算術圧縮器
+	//================================================================
+	class NibbleRangeEncoder:public mwg::Stream::InStream{
+		static const int B_RANGE	=NibbleRC::B_RANGE;
+		static const int SZ_RANGE	=NibbleRC::SZ_RANGE;
+		static const int MSB_RANGE	=NibbleRC::MSB_RANGE;
+		static const int MSK_RANGE	=NibbleRC::MSK_RANGE;
+
+		InStream* istr;
+		mwg::Stream::BufferStream buff;
+		BitWriter bw;
+		uint r_s; // start of range
+		uint r_e; // end of range
+		NibbleFrequency low;
+		NibbleFrequency high;
+
+		byte count;
+		bool terminated;
+	public:
+		NibbleRangeEncoder(InStream& istr)
+			:istr(&istr),buff(),bw(buff),r_s(0),r_e(MSK_RANGE)
+			,terminated(false),count(0)
+		{}
+	//================================================================
+	//	エンコード
+	//================================================================
+	private:
+		void flush(){
+			mwg::break_assert(r_s<r_e);
+			/* MSB_RANGE bit が等しい時 */
+			while(((r_s^r_e)&MSB_RANGE)==0){
+				bw.write_bits(r_s>>(B_RANGE-1),1);
+				r_s=r_s<<1;//&MSK_RANGE;
+				r_e=r_e<<1;//&MSK_RANGE;
+			}
+		}
+		void add(byte value){
+			count++; // 終了マーカー
+
+			low.select_range(value,r_s,r_e);
+			low.report(value); // 選択後に更新 (自分を記録するのに自分の情報は使えないので)
+			flush();
+
+			high.select_range(value>>4,r_s,r_e);
+			high.report(value>>4);
+			flush();
+		}
+		void terminate(){
+			if(terminated)return;
+			terminated=true;
+			// [r_s, r_e) の数で有効数字が最小の物は
+			//---------------------------------------------
+			// r_s     : xxxxxxx01101010
+			// r_e     : xxxxxxx1zzzzzzz
+			// 最小    : xxxxxxx1------- (z≠0 の時)
+			//         : xxxxxxx0111---- (z＝0 の時)
+			//                     ~ 最初の 0 の位置
+			//---------------------------------------------
+			// r_s     : xxxxxxx01101010
+			// r_e-1   : xxxxxxx1aaaaaaa (z≠0 の時)
+			// r_e-1   : xxxxxxx01111111 (z＝0 の時)
+			//---------------------------------------------
+			assert((r_s&MSB_RANGE)==0);
+			assert((r_e&MSB_RANGE)==MSB_RANGE);
+			r_e--;
+			flush();
+			if(r_s&MSK_RANGE)
+				bw.write_bits(1,1);
+			bw.terminate();
+			bw.write_byte(count);
+		}
+	//================================================================
+	//	ストリーム
+	//================================================================
+	public:
+		bool eos(){
+			while(buff.empty()){
+				if(istr->eos()){
+					this->terminate();
+					break;
+				}
+				add(istr->get_byte());
+			}
+
+			return buff.empty();
+		}
+		byte_n get_byte(){
+			return eos()?-1: buff.read_byte();
+		}
+	};
+	//****************************************************************
+	//		4bit 単位算術伸張器
+	//================================================================
+	class NibbleRangeDecoder:public mwg::Stream::InStream{
+		static const int B_RANGE	=NibbleRC::B_RANGE;
+		static const int SZ_RANGE	=NibbleRC::SZ_RANGE;
+		static const int MSB_RANGE	=NibbleRC::MSB_RANGE;
+		static const int MSK_RANGE	=NibbleRC::MSK_RANGE;
+
+		BitReader br;
+		uint r_s; // start of range
+		uint r_e; // end of range
+		uint r;   // exact value
+		byte count;
+		NibbleFrequency low;
+		NibbleFrequency high;
+
+		// 最後のバイトだけ自分の為に取って置くストリーム
+		class TrimEndStream:public InStream{
+			InStream& istr;
+			byte buff;
+		public:
+			TrimEndStream(InStream& istr)
+				:istr(istr),buff(0)
+			{
+				if(istr.eos())return;
+				buff=istr.get_byte();
+			}
+			byte_n get_byte(){
+				if(istr.eos())return -1;
+
+				byte ret=buff;
+				buff=istr.get_byte();
+				return ret;
+			}
+			bool eos(){
+				return istr.eos();
+			}
+		public:
+			byte last_byte(){
+				return buff;
+			}
+		} te_str;
+	public:
+		NibbleRangeDecoder(InStream& istr)
+			:r_s(0),r_e(MSK_RANGE)
+			,te_str(istr),br(/* 空初期化 */)
+			,r(0),count(0)
+		{
+			this->br=BitReader(te_str);
+			for(int i=0;i<B_RANGE;i++){
+				r=r<<1|br.read_bits(1,false);
+			}
+		}
+	//================================================================
+	//	デコード
+	//================================================================
+	private:
+		void load(){
+			mwg::break_assert(r_s<=r&&r<r_e);
+
+			/* MSB_RANGE bit が等しい時 */
+			while(((r_s^r_e)&MSB_RANGE)==0){
+				r=r<<1|br.read_bits(1,false);
+				r_s=r_s<<1;//&MSK_RANGE;
+				r_e=r_e<<1;//&MSK_RANGE;
+			}
+		}
+		byte read(){
+			static int i=0;i++;
+			count++; // 終了マーカーと一致させる為
+			int f=i;
+
+			nibble l=low.search_range(r,r_s,r_e);
+			low.report(l);
+			load();
+
+			nibble h=high.search_range(r,r_s,r_e);
+			high.report(h);
+			load();
+
+			return l|h<<4;
+		}
+	//================================================================
+	//	ストリーム
+	//================================================================
+	public:
+		bool eos(){
+			return te_str.eos()&&count==te_str.last_byte();
+		}
+		byte_n get_byte(){
+			if(this->eos())return -1;
+			return read();
+		}
+	};
+//-----------------------------------------------------------------------------
+			// ⇒ r_l >= UNI_SEND
+			// ⇒ r_s + r_l >= r_s + UNI_SEND > r_s
+			// [r_l == UNI_SEND の時]
+			// 　r_s < r_s + UNI_SEND -1 < r_s + r_l
+			// [r_l != UNI_SEND の時]
+			// 　r_s < r_s + UNI_SEND < r_s + r_l
+			// 　r_s < r_s + UNI_SEND - 1 < r_s + r_l
+			// ⇒ r_s + r_l >= r_s + UNI_SEND
+			//               > r_s + UNI_SEND - 1 > r_s
+			//---------------------------------------------
+			// r_s : 0000 1101 00000000
+			// r_l : 0000 0001 zzzzzzzz
+			// out : 0000 1101 --------
+			//---------------------------------------------

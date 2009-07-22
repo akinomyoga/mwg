@@ -1,0 +1,440 @@
+
+*******************************************************************************
+	算術圧縮との組合せ : 根本的な改良に関して
+===============================================================================
+　1.ブロック指定子と生データの部分の頻度表は区別を行った方が良い
+　　→ブロック指定子と生データのそれぞれには、それぞれの傾向があり、
+　　それを反映するにはそれぞれ別の頻度表を用いた方が良い
+　2.更に、ブロック指定子の中のそれぞれの部分についても
+　　頻度表を持つ方が好ましい。
+　3.一般化して、算術圧縮器に対して、
+　　頻度表を "確率予測器" として外部から与える事が出来る様にする。
+　　即ち、データを読み書きする関数は
+　　　encoder.write_data(書き込む値, 確率予測器);
+　　　読み込んだ値 = decoder.read_data(確率予測器);
+　　等とする。
+
+　→つまり、算術圧縮器を再度書き直す (とは言っても、余り変更する所は無い筈である)
+===============================================================================
+
+* 確率予測器 PP
+　[0, N) の文字の次の出現確率を述べるクラスである。
+　
+　uint max_value();
+　　N を返す。
+
+　void report(uint val);
+　　実際に実現した値を報告する
+　　予測器は茲で報告された値に応じて頻度表を修正するなり何なりする
+
+　uint operator()(uint val);
+　　累積分布を取得する。
+　　assert(pp(0)==0);
+　　assert(pp(N)==RangeCoderPref::SUP_FREQ);
+　　assert(for any value, pp(value) < pp(value+1));
+　　// 或る値が絶対に出ないという事が分かっている場合にはこの限りではない。
+
+　Coder が使用するのは以上である。
+　
+　その他趣味で色々な関数を追加すると良い。
+　　例えば、「或る特定の出来事が起こった次は確率分布が変化する」
+　　場合には、その出来事が起こった事を通知する関数を追加する。
+　　coder に渡す前にその関数を実行してから渡す様にすると良い。
+　　
+* 圧縮列末端の終了符号について
+ 
+　[当初の手法]
+　push_value の回数の下 8bit
+　→これによって、厳密に何回 pop_value が出来るかが分かる
+
+　×下 8bit だけで足りるか?
+　　極端な場合、確率分布が完全決定の場合、
+　　push_value を何回実行しても 1bit も出力しない。
+　　その様な場合は現実的にはあり得ないが、
+　　ロジックとして完全にするには厳密な回数を記録する必要がある。
+
+　×更に、push_value する内容によって末端を知り得る場合に限っては
+　　抑も終了符号を掃き出す必要もない。
+　　これは、符号化する対象の物によって異なる筈である。
+　　故に、設定によって終端符号の長さを指定できる様にすると良い。
+
+　→コンストラクタにて終端符号の長さ byte 単位を指定出来る様にする
+　　0   の時: 終端符号は出力しない
+　　　value の内容によって終端を知り得る場合はこれで良い
+
+　　1   の時: 終端符号は 1B
+　　　value の最小情報量が 1/32 bit (8bit/256) 以上 である場合にはこれで充分である。
+　　
+　　2-4 の時: 終端符号は 2-4B (LE) とする
+　　　2: value の最小情報量が 1/8192 bit 以上ならこれで充分
+　　　3: value の最小情報量が 1/2097152 bit 以上ならこれで充分
+　　　4: value の最小情報量が 1/536870912 bit 以上ならこれで充分
+　　　n: value の最小情報量が 8/(256^n) bit 以上ならこれで充分
+　　
+　　因みに完全予測可能な状況がない場合は、
+　　最大確率   → (SUP_FREQ-1)/SUP_FREQ  == 0.999755859375 (B_FREQ=12 の時)
+　　最小情報量 → - p log p              == 0.000352177469 bit ≒ 1/2840 bit
+　　なので、終端符号は 2B あれば充分である事が分かる。
+　　
+　　※ 完全予測可能な状況 := 次に来得る値が一つしかない状況 == エントロピー 0 の状況
+　　　
+　　
+　　之より長い終端符号に関しては対応しない。現実的には 1 で充分であろう。
+
+*******************************************************************************
+	二の累乗による割り算はシフトに最適化されるのか?
+===============================================================================
+	以下の様にして試してみた所、ちゃんとシフトに最適化されていた in Release
+
+__declspec(noinline) int test_optimize(int i){
+	return i/16;
+}
+
+	std::cout<<test_optimize(100);
+
+__declspec(noinline) int test_optimize(int i){
+00401A10  push        ebp  
+00401A11  mov         ebp,esp 
+	return i/16;
+00401A13  mov         eax,dword ptr [i] 
+00401A16  cdq              
+00401A17  and         edx,0Fh 
+00401A1A  add         eax,edx 
+00401A1C  sar         eax,4 
+}
+
+*******************************************************************************
+	進捗状況を報告しながら圧縮 : 書き直し
+===============================================================================
+古いコード
+
+	void MdkCompressFile(const char* sourceFile,const char* destinationFile,void (*pfnProgress)(int percent)){
+		mwg::Stream::ReadFileStream istr(sourceFile);
+		mwg::Stream::WriteFileStream ostr(destinationFile);
+
+		class ProgressCounter:public mwg::Stream::InStream{
+			mwg::Stream::InStream* istr;
+			uint total;
+			void (*pfn)(int);
+			uint count;
+			uint next_count;
+			uint percent;
+		public:
+			ProgressCounter(const char* filename,void (*pfnProgress)(int percent))
+				:istr(nullptr),total(0),pfn(pfnProgress),count(0),percent(0)
+			{
+				struct _stat finfo;
+				_stat(filename,&finfo);
+				this->total=finfo.st_size;
+				this->update_percent(0);
+			}
+			~ProgressCounter(){}
+			byte_n get_byte(){
+				if(++count==next_count)
+					this->update_percent(percent+1);
+
+				return istr->get_byte();
+			}
+			bool eos(){
+				return istr->eos();
+			}
+		private:
+			void update_percent(int percent){
+				this->percent=percent;
+				this->pfn(percent);
+				this->next_count=(percent+1)*total/100;
+			}
+		public:
+			InStream* CreateInStream(mwg::Stream::InStream* istr) const{
+				ProgressCounter* pthis=const_cast<ProgressCounter*>(this);
+				pthis->istr=istr;
+				return pthis;
+			}
+		} *progress=new ProgressCounter(sourceFile,pfnProgress);
+
+		mwg::Stream::InStreamConnector connector(istr);
+		connector
+			>>*progress
+			>>mwg::Stream::InStreamCreator<MdkEncoder>()
+			>>(mwg::Stream::OutStream&)ostr;
+	}
+*******************************************************************************
+	RangePredictor の値の設定を xml から行える様にするに伴って
+===============================================================================
+廃止された古いコード
+	class MdkCoderBase:public mwg::Stream::InStream{
+		MdkCoderBase(){
+			MdkPref::PP_RAWLEN::GetRangeData(range_s);
+		}
+	};
+
+	class MdkPref{
+		struct PP_RAWLEN{
+			static const int N_RANGE=16;
+			static void GetRangeData(uint* range_s);
+		};
+	};
+	
+	//================================================================
+	//	PP_RAWLEN
+	//================================================================
+	void MdkPref::PP_RAWLEN::GetRangeData(mwg::uint *range_s){
+		if(MdkPref::PP_RAWLEN::N_RANGE!=16)
+			mwg::break_throw<std::logic_error>("指定した長さの分割には対応していません。");
+
+		switch(MdkPref::SUP_RAWLEN-MdkPref::MIN_RAWLEN){
+			case 256:
+				range_s[0]	=0;
+				range_s[1]	=1;
+				range_s[2]	=2;
+				range_s[3]	=3;
+				range_s[4]	=4;
+				range_s[5]	=6;
+				range_s[6]	=8;
+				range_s[7]	=12;
+				range_s[8]	=16;
+				range_s[9]	=24;
+				range_s[10]	=32;
+				range_s[11]	=48;
+				range_s[12]	=64;
+				range_s[13]	=96;
+				range_s[14]	=128;
+				range_s[15]	=192;
+				range_s[16]	=256;
+				break;
+			case 64:
+				range_s[0]	=0;
+				range_s[1]	=1;
+				range_s[2]	=2;
+				range_s[3]	=3;
+				range_s[4]	=4;
+				range_s[5]	=5;
+				range_s[6]	=6;
+				range_s[7]	=8;
+				range_s[8]	=10;
+				range_s[9]	=13;
+				range_s[10]	=17;
+				range_s[11]	=22;
+				range_s[12]	=28;
+				range_s[13]	=35;
+				range_s[14]	=43;
+				range_s[15]	=53;
+				range_s[16]	=64;
+				break;
+			default:
+				mwg::break_throw<std::logic_error>("指定した長さの RAWLEN は想定していません。");
+				break;
+		}
+	}
+
+*******************************************************************************
+	バグ#1: Release モードでの解凍が出来ない
+===============================================================================
+[状況]
+Debug では正しく解凍が実行されるのに、Release では少ししか出力しないうちに解凍が終了してしまう。
+1.圧縮は正しく実行できている。
+　先ず、圧縮した内容は正しいのかどうかを確認してみた。
+　問題の解凍できないファイル (Release で圧縮した物) を、Debug で圧縮した場合と比較してみたら
+　サイズは元より、内容も同じであった。少なくとも、初めの方と最後の方は完全に一致している。
+2.解凍は初めの 30B で既に失敗している
+　解凍した結果は、初めの 30B 程度は正しく出力できているが、其れより後は滅茶苦茶な内容になっている。
+　つまり、出力としては 448B 出力しているが、正しく出力できているのは 30B だけで、
+　バグが顕在化しているのは比較的初めの方であると言う事が分かる。
+　(寧ろ、バグが顕在化するまでに 30B は出力できるというのが気になる…)
+
+[原因?]
+調べてみた所、原因として考えられるのは、
+a.Debug 時にはわざわざ初期化をしてくれているので、問題が生じなかったのが、
+　Release 時に初期化をしてくれなくなった事により問題が表面化する。
+b.メモリアクセス違反を実はしているのだが、Debug 時のメモリ配置では問題が生じなかった。
+　所が、Release のメモリ配置になった時にメモリのアクセス違反が深刻な問題を引き起こして居る。
+
+
+1.
+・取り敢えず、初めの 30B は出力できている事から MdkDecoder の初期化の失敗ではない…?
+・NibbleReader が怪しいと思ったが、これの実装は単純なのでバグが含まれているとは考え難い。
+・圧縮は清浄に行えている事から、圧縮では使用していないが解凍で使用している部分に問題がありそう?
+・また、色々に設定していた break_assert を有効にしてみたが、引っかかる事はなかった。
+
+2. 実際に流れているデータを出力してみる。
+　→実際に NibbleReader からの出力を dump してみたが、
+　　茲から出て来る物は debug モードの時も release モードの時も全く同じであった。
+　→pop_data から出て来るデータを観察してると、茲から出て来るデータが異なっている事が分かった。
+　　1 4 42 4d e 86 0 0 0 0 0 1 1 12 76 0 0 0 28 0 0 0 2c 1 0 0 0 e1 0 0 0 1 0 4 0 24 cd...
+　　1 4 42 4d e 86 0 0 0 0 0 1 1 12 76 0 0 0 28 0 0 0 2c 1 0 0 0 e1 0 0 0 1 0 4 0 18 0...
+　　
+　　とすると、悪いのは pop_data の呼び出す時の引数か、或いは、Predictor が誤っているかである。
+　　然し、Predictor は圧縮でも使用しているし、其処で問題を出していないのだから、
+　　怪しいのは pop_data の引数である (つまり、Predictro の選択を誤っているという事)。
+　　(というか、若し Predictor の方に以上があるのだとしたら余計にデバグが面倒になるので嫌だ)
+　→実際に呼び出されている Predictor の種類を調べてみると、
+　　[debug]
+　　bin range byte byte byte byte byte bin bin range range bin range
+　　byte byte byte byte byte byte byte byte byte byte byte byte byte
+　　byte byte byte byte byte byte bin bin range range
+　　
+　　[release]
+　　bin range byte byte byte byte byte bin range bin range bin range
+　　                                       ~~~~~~~~~
+　　byte byte byte byte byte byte byte byte byte byte byte byte byte
+　　byte byte byte byte byte byte bin range bin range (以降は滅茶苦茶)
+　　                                  ~~~~~~~~~
+　　どうも、RangePredictor と BinPredictor の呼び出される順番が狂っている様である…。
+　　然し、Debug モード/Release モードの違いで順番が入れ替わる物だなあ…
+
+　　# Predictor のバグでなくて良かった…
+　　# まあ、未だ二重バグの可能性を除き切れている訳ではないが。
+　　
+　　註:
+　　一個目の入れ替わりで異常が発生していないのは、両方とも読み取った値が 0 で
+　　何れの Predictor も一番最初の Range を選択したからである
+　　(何れも最初なので、二つ読み取った後の Range の開始位置は必ず読み取り前と同じになっていて、両者は一致する。)
+　　
+　　なので、一個目の入れ替わりの影響が、何処かに隠れていて後の方になって以上が出てきたという訳ではない
+　　(と思われる。根拠はないが、状況的に殆ど其れで確定である。)
+　　
+3. さて、以降は Predictor 仕様順の一個目の入れ替わりを解決する方向で考えていけば問題ないだろう。
+　・先ず上記の Predictor の Sequence と元のソースを見るに、
+　　どの様な構造になっているかを書き出すと以下の様になる。
+　　
+	[debug]
+　　RawData:	bin <range> <byte byte byte byte byte>
+　　Reference:	bin <bin range> <range>
+　　RawData:	bin <range> <byte byte byte byte byte byte byte byte byte byte byte byte byte
+　　						 byte byte byte byte byte byte>
+　　Reference:	bin <bin range> <range>
+	
+	[release]
+　　RawData:	bin <range> <byte byte byte byte byte>
+　　Reference:	bin <range bin> <range>
+　　RawData:	bin <range> <byte byte byte byte byte byte byte byte byte byte byte byte byte
+　　						 byte byte byte byte byte byte>
+　　Reference:	bin <range bin> <range>
+　　
+　　問題は、Reference ブロックのアドレス読み取り部分に存在している様である。
+　　問題の部分は、
+		int address
+			=rc_dec.pop_data(pp_refadr_l)						// ← pp_refadr_l is BinPredictor
+			|rc_dec.pop_data(pp_refadr_h)<<B_REFADR_L;			// ← pp_refadr_h is RangePredictor
+		uint jcache=MSK_WINDOW&(icache-1-address+SZ_WINDOW);
+		uint len=MIN_REFLEN+rc_dec.pop_data(pp_reflen);			// ← pp_reflen is RangePredictor
+	である。
+　　　うーん…Release では pop_data を呼び出す順番が逆転している模様である。
+　　というか、式中で左から順番に評価されるというのは C の規格とかに入っていないのか?
+　　普通に其れは守られる物と思って良いのかと思っていたが…
+　　
+　　確かにコンパイラの気持ちは分からないでも無い。先に後の方を実行しておけば
+　　call 後
+　　mov edx, eax
+　　shl edx, 8
+　　call 前
+　　or  edx, eax
+　　等と出来る…。が、然し、評価の順番は保証されていないのか…!?
+　　もし評価の順番が保証されていないのだとしたら、今迄に書いた部分でも沢山バグ源がありそうな気がする…。
+　　
+　→諦めて二分に分けて記述する事にする。
+　　そうしたら、普通に解凍が完了した。これで一応は解決…。
+　　
+[コード]
+A.以下、デバグの際に用いたコード
+　・RangeDecoder#load()
+		void load(){
+			/* r_l が MSK_SEND に掛からない位小さい時 */
+			while((r_l&MSK_SEND)==0){
+/*
+				r=r<<B_SEND|nr.read_nibble();
+//				r=r<<B_SEND|br.read_bits(B_SEND,false);
+//				r_s=r_s<<B_SEND;//&MSK_RANGE;
+				r_l=r_l<<B_SEND;//&MSK_RANGE;
+/*/ bug#1
+				byte nib=nr.read_nibble();
+				printf("%1x",nib);
+				r=r<<B_SEND|nib;
+				r_l=r_l<<B_SEND;//&MSK_RANGE;
+//*/
+			}
+			mwg::break_assert(0<=r&&r<r_l);
+		}
+　・RangeDecoder#pop_data(TPredictor&)
+		template<typename TPredictor>
+		uint pop_data(TPredictor& pp){
+			term_code++;
+
+			uint value=peak_data<TPredictor>(pp);
+//* bug#1
+			char* dbg_func=__FUNCDNAME__;
+			printf("%x: pp %s\n",value,dbg_func+85);
+//*/
+
+			// r, r_s, r_l 更新
+			uint new_s=pp(value);
+			uint new_l=pp(value+1)-new_s;
+			new_s =r_l*new_s>>B_FREQ;
+			new_l =r_l*new_l>>B_FREQ;
+			r_l   =new_l;
+//			r_s  +=new_s;
+			r    -=new_s;
+
+			mwg::break_assert(new_l>0&&0<r_l);
+
+			mwg::break_assert(0<=r&&r<r_l);
+			pp.report(value);
+			load();
+
+			return value;
+		}
+　・MdkDecoder#next()
+　　	void next(){
+			switch(rc_dec.pop_data(pp_blktyp)){
+				case BlockType::RawData: /* <ブロック RAW> */{
+					uint jM=MIN_RAWLEN+rc_dec.pop_data(pp_rawlen);
+					for(uint j=0;j<jM;j++)
+						write(rc_dec.pop_data(pp_raw)); /* OPT */
+					break;
+				}
+				case BlockType::Reference:{
+/*/
+					int address
+						=rc_dec.pop_data(pp_refadr_l)
+						|rc_dec.pop_data(pp_refadr_h)<<B_REFADR_L;
+/*/ // bug#1
+					uint adr_l=rc_dec.pop_data(pp_refadr_l);
+					uint adr_h=rc_dec.pop_data(pp_refadr_h);
+					int address=adr_l|adr_h<<B_REFADR_L;
+//*/
+					uint jcache=MSK_WINDOW&(icache-1-address+SZ_WINDOW);
+					uint len=MIN_REFLEN+rc_dec.pop_data(pp_reflen);
+
+					while(len--){
+						write(cache[jcache++]);
+						jcache&=MSK_WINDOW;
+					}
+					break;
+				}
+				case BlockType::Control:
+					terminated=true;
+					break;
+				default:
+					__assume(false);
+			}
+		}
+
+B.実際に有効な変更
+　・MdkDecoder#next()
+				case BlockType::Reference:{
+-					int address
+-						=rc_dec.pop_data(pp_refadr_l)
+-						|rc_dec.pop_data(pp_refadr_h)<<B_REFADR_L;
++					// 二つに分けるのは評価の順序を保証する為 ref bug#1
++					uint adr_l=rc_dec.pop_data(pp_refadr_l);
++					uint adr_h=rc_dec.pop_data(pp_refadr_h);
++					int address=adr_l|adr_h<<B_REFADR_L;
+
+					uint jcache=MSK_WINDOW&(icache-1-address+SZ_WINDOW);
+					uint len=MIN_REFLEN+rc_dec.pop_data(pp_reflen);
+
+[纏め]
+
+　! 式 A|B は必ずしも A→B の順番で評価される訳ではないと言う事
+
+------------------ 完 ------------------

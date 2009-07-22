@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RangeData>
+	<ranges name="default" max_value="256" range_count="16">
+		0 1 2 3 4 6 8 12 16 24 32 48 64 96 128 192 256
+	</ranges>
+	<ranges name="default" max_value="64" range_count="16">
+		0 1 2 3 4 5 6 8 10 13 17 22 28 35 43 53 64
+	</ranges>
+</RangeData>
