@@ -1,0 +1,207 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A6F0AA98-9C75-43AA-8019-CAA0BD6A4185}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>mwg.Controls</AssemblyName>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>mwg.Controls</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>none</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <Name>System.Windows.Forms</Name>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.XML</Name>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <None Include="..\..\..\Addins\include\mwg.Controls.WB.hs">
+      <Link>WebBrowser\mwg.Controls.WB.hs</Link>
+    </None>
+    <Compile Include="ControlBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="WebBrowser\Definition.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Definition.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\Collection.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Collection.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\Collection.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Collection.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\Definition.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Definition.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\Document.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Document.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\Element.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Element.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\ElementBase.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>ElementBase.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\Element.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Element.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\ElementBase.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ElementBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\Event.cs" />
+    <Compile Include="WebBrowser\MshtmlObject.cs" />
+    <Compile Include="WebBrowser\ScriptInterop.cs" />
+    <Compile Include="WebBrowser\Style.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Style.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\Style.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Style.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WebBrowser\Document.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Document.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="TextBox\mwg.Windows.Caret.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TextBox\mwg.Windows.IME.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TextBox\mwg.Windows.KeyManager.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TextBox\TextBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="WebBrowser\WebView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="WebBrowser\Window.cs">
+      <Generator>TemplateProcessor</Generator>
+      <LastGenOutput>Window.gen.cs</LastGenOutput>
+    </Compile>
+    <Compile Include="WebBrowser\Window.gen.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Window.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="WebBrowser\WebView.bmp" />
+    <EmbeddedResource Include="TextBox\TextBox.resx">
+      <DependentUpon>TextBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WebBrowser\WebView.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>WebView.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\mwg\mwg.csproj">
+      <Project>{98878813-353D-4858-B44B-E4D43C90B933}</Project>
+      <Name>mwg</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
