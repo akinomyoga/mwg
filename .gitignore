@@ -1,0 +1,25 @@
+# gitignore
+
+# automatically generated files
+*.user
+Debug
+Release
+bin
+obj
+*.suo
+*.ncb
+
+# log files
+
+/mwg.Compress/c2log.txt
+/mwg/log.log
+
+# binaries
+
+/TestProjects/Assembly/kainushi.exe
+/TestProjects/Assembly/lib/mydll1.dll
+/mwg.Memory/Old/Memory.dll
+
+# data file
+
+/mwg.Memory/\[!tochu\]Disassemble/Command.xml
