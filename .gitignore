@@ -2,7 +2,6 @@
 
 # automatically generated files
 *.user
-Debug
 Release
 bin
 obj
@@ -23,3 +22,7 @@ obj
 # data file
 
 /mwg.Memory/\[!tochu\]Disassemble/Command.xml
+
+/Debug/mwg.Compress.*
+/mwg.Compress/Debug
+/UpgradeLog.htm
